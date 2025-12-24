@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquarium Fish Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #1a2980, #26d0ce);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        .container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+        }
+        
+        #aquarium {
+            background: linear-gradient(to bottom, #0a3d62, #1e5799);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            border: 3px solid #0c4b75;
+        }
+        
+        .fish {
+            position: absolute;
+            transition: transform 0.2s;
+        }
+        
+        .food {
+            position: absolute;
+            background-color: #ff9900;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #ff6600;
+        }
+        
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 8s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 0; }
+            10% { opacity: 0.8; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="aquarium"></div>
+        <div class="instructions">Click anywhere in the aquarium to add fish food</div>
+    </div>
+
+    <script>
+        const aquarium = document.getElementById('aquarium');
+        const aquariumWidth = aquarium.offsetWidth;
+        const aquariumHeight = aquarium.offsetHeight;
+        
+        // Fish class
+        class Fish {
+            constructor() {
+                this.size = Math.random() * 30 + 20;
+                this.x = Math.random() * (aquariumWidth - this.size);
+                this.y = Math.random() * (aquariumHeight - this.size);
+                this.speed = Math.random() * 2 + 1;
+                this.angle = Math.random() * Math.PI * 2;
+                this.color = this.getRandomColor();
+                this.foodTarget = null;
+                this.isEating = false;
+                this.swimDirection = Math.random() > 0.5 ? 1 : -1;
+                
+                this.element = document.createElement('div');
+                this.element.className = 'fish';
+                this.updateElement();
+                aquarium.appendChild(this.element);
+            }
+            
+            getRandomColor() {
+                const colors = [
+                    '#FF5252', '#FF4081', '#E040FB', '#7C4DFF', 
+                    '#536DFE', '#448AFF', '#40C4FF', '#18FFFF',
+                    '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41'
+                ];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            updateElement() {
+                this.element.style.width = `${this.size}px`;
+                this.element.style.height = `${this.size * 0.6}px`;
+                this.element.style.backgroundColor = this.color;
+                this.element.style.borderRadius = '50% 50% 50% 50% / 60% 60% 40% 40%';
+                this.element.style.left = `${this.x}px`;
+                this.element.style.top = `${this.y}px`;
+                this.element.style.transform = `scaleX(${this.swimDirection})`;
+            }
+            
+            move() {
+                if (this.isEating && this.foodTarget) {
+                    // Move towards food
+                    const dx = this.foodTarget.x - this.x;
+                    const dy = this.foodTarget.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 10) {
+                        // Eat the food
+                        this.foodTarget.element.remove();
+                        this.foodTarget = null;
+                        this.isEating = false;
+                    } else {
+                        // Move towards food
+                        this.x += (dx / distance) * this.speed;
+                        this.y += (dy / distance) * this.speed;
+                        this.swimDirection = dx > 0 ? 1 : -1;
+                    }
+                } else {
+                    // Random swimming behavior
+                    this.angle += (Math.random() - 0.5) * 0.1;
+                    this.x += Math.cos(this.angle) * this.speed;
+                    this.y += Math.sin(this.angle) * this.speed;
+                    
+                    // Bounce off walls
+                    if (this.x < 0 || this.x > aquariumWidth - this.size) {
+                        this.angle = Math.PI - this.angle;
+                    }
+                    if (this.y < 0 || this.y > aquariumHeight - this.size) {
+                        this.angle = -this.angle;
+                    }
+                    
+                    // Occasionally change direction
+                    if (Math.random() < 0.02) {
+                        this.angle = Math.random() * Math.PI * 2;
+                    }
+                }
+                
+                this.updateElement();
+            }
+            
+            findClosestFood(foodList) {
+                if (foodList.length === 0) return null;
+                
+                let closestFood = null;
+                let closestDistance = Infinity;
+                
+                for (const food of foodList) {
+                    const dx = food.x - this.x;
+                    const dy = food.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestFood = food;
+                    }
+                }
+                
+                return closestFood;
+            }
+        }
+        
+        // Food class
+        class Food {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 8 + 4;
+                
+                this.element = document.createElement('div');
+                this.element.className = 'food';
+                this.element.style.width = `${this.size}px`;
+                this.element.style.height = `${this.size}px`;
+                this.element.style.left = `${this.x}px`;
+                this.element.style.top = `${this.y}px`;
+                aquarium.appendChild(this.element);
+            }
+            
+            remove() {
+                this.element.remove();
+            }
+        }
+        
+        // Bubble class
+        class Bubble {
+            constructor() {
+                this.size = Math.random() * 10 + 5;
+                this.x = Math.random() * aquariumWidth;
+                this.y = aquariumHeight + this.size;
+                this.speed = Math.random() * 1 + 0.5;
+                this.life = Math.random() * 5000 + 3000;
+                
+                this.element = document.createElement('div');
+                this.element.className = 'bubble';
+                this.element.style.width = `${this.size}px`;
+                this.element.style.height = `${this.size}px`;
+                this.element.style.left = `${this.x}px`;
+                this.element.style.bottom = `${this.y}px`;
+                this.element.style.animationDuration = `${this.life}ms`;
+                aquarium.appendChild(this.element);
+            }
+            
+            update() {
+                this.y -= this.speed;
+                this.element.style.bottom = `${this.y}px`;
+                
+                if (this.y < -this.size) {
+                    this.element.remove();
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        // Create fish
+        const fishList = [];
+        for (let i = 0; i < 8; i++) {
+            fishList.push(new Fish());
+        }
+        
+        // Create bubbles
+        const bubbleList = [];
+        function createBubbles() {
+            if (bubbleList.length < 20) {
+                bubbleList.push(new Bubble());
+            }
+        }
+        
+        // Food list
+        const foodList = [];
+        
+        // Mouse click to add food
+        aquarium.addEventListener('click', (e) => {
+            const rect = aquarium.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            foodList.push(new Food(x, y));
+        });
+        
+        // Animation loop
+        function animate() {
+            // Update fish
+            for (const fish of fishList) {
+                // Check if fish should start eating
+                if (!fish.isEating && foodList.length > 0) {
+                    const closestFood = fish.findClosestFood(foodList);
+                    if (closestFood) {
+                        fish.foodTarget = closestFood;
+                        fish.isEating = true;
+                    }
+                }
+                
+                fish.move();
+            }
+            
+            // Update bubbles
+            for (let i = bubbleList.length - 1; i >= 0; i--) {
+                if (bubbleList[i].update()) {
+                    bubbleList.splice(i, 1);
+                }
+            }
+            
+            // Create new bubbles occasionally
+            if (Math.random() < 0.1) {
+                createBubbles();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Start animation
+        animate();
+        
+        // Initial bubbles
+        for (let i = 0; i < 15; i++) {
+            setTimeout(() => createBubbles(), i * 500);
+        }
+    </script>
+</body>
+</html>

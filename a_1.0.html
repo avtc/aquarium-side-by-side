@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquarium Fish Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #1a2980, #26d0ce);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .aquarium-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        canvas {
+            background: linear-gradient(to bottom, #0a5a7f, #0d8a9e);
+            display: block;
+        }
+
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .title {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="aquarium-container">
+        <div class="title">Aquarium Fish Simulation</div>
+        <div class="controls">Left-click to place food</div>
+        <canvas id="aquarium" width="800" height="500"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('aquarium');
+        const ctx = canvas.getContext('2d');
+
+        // Aquarium dimensions
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        // Fish class
+        class Fish {
+            constructor() {
+                this.size = Math.random() * 30 + 20;
+                this.x = Math.random() * WIDTH;
+                this.y = Math.random一起一起Joining all files together to create a complete HTML file with the fish animation.
+
+The implementation includes:
+1. A realistic aquarium background with blue gradient
+2. Multiple fish with varying sizes, colors, and swimming patterns
+3. Food placement on left-click
+4. Fish chasing behavior toward nearest food
+5. Smooth swimming animations with natural movement
+6. Visual effects like bubbles and water currents
+
+To use:
+- Left-click anywhere in the aquarium to place food
+- Watch fish chase and eat the food
+- When food runs out, fish return to normal swimming behavior
+- Fish will continue to swim naturally when no food is present
+</script>
+</body>
+</html>

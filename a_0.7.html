@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquarium Fish Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #1a2980, #26d0ce);
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #aquarium-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #aquarium {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #0a3d62, #1e5799);
+            position: relative;
+        }
+        
+        .fish {
+            position: absolute;
+            transition: transform 0.2s;
+            z-index: 2;
+        }
+        
+        .food {
+            position: absolute;
+            background-color: #ffcc00;
+            border-radius: 50%;
+            z-index: 1;
+            box-shadow: 0 0 5px #ff9900;
+        }
+        
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 8s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+        
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="aquarium-container">
+        <div id="aquarium">
+            <div class="info">Aquarium Fish Simulation</div>
+            <div class="instructions">Click anywhere to add fish food</div>
+        </div>
+    </div>
+
+    <script>
+        const aquarium = document.getElementById('aquarium');
+        const container = document.getElementById('aquarium-container');
+        const fishCount = 8;
+        const foodPieces = [];
+        const fishArray = [];
+        let fishFoodCounter = 0;
+
+        // Create bubbles
+        function createBubbles() {
+            for (let i = 0; i < 20; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.width = Math.random() * 20 + 5 + 'px';
+                bubble.style.height = bubble.style.width;
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.animationDelay = Math.random() * 5 + 's';
+                bubble.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                aquarium.appendChild(bubble);
+            }
+        }
+
+        // Create fish
+        function createFish(x, y) {
+            const fish = document.createElement('div');
+            fish.className = 'fish';
+            
+            // Random fish properties
+            const size = Math.random() * 30 + 20;
+            const colors = [
+                '#FF5252', '#FF4081', '#E040FB', '#7C4DFF',
+                '#536DFE', '#448AFF', '#40C4FF', '#18FFFF',
+                '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41',
+                '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'
+            ];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            fish.innerHTML = `
+                <svg width="${size}" height="${size/2}" viewBox="0 0 ${size} ${size/2}">
+                    <path d="M${size/2} ${size/4} Q${size} ${size/4} ${size} ${size/2} Q${size/2} ${size/2} ${size/2} ${size/4} Z" fill="${color}" />
+                    <circle cx="${size/3}" cy="${size/4}" r="${size/10}" fill="white"/>
+                    <circle cx="${size/3}" cy="${size/4}" r="${size/15}" fill="black"/>
+                </svg>
+            `;
+            
+            fish.style.width = size + 'px';
+            fish.style.height = size/2 + 'px';
+            fish.style.left = x + 'px';
+            fish.style.top = y + 'px';
+            
+            aquarium.appendChild(fish);
+            
+            return {
+                element: fish,
+                x: x,
+                y: y,
+                size: size,
+                speed: Math.random() * 2 + 1,
+                angle: Math.random() * Math.PI * 2,
+                targetFood: null,
+                chasing: false,
+                direction: Math.random() > 0.5 ? 1 : -1
+            };
+        }
+
+        // Create initial fish
+        function createInitialFish() {
+            for (let i = 0; i < fishCount; i++) {
+                const x = Math.random() * (container.offsetWidth - 100) + 50;
+                const y = Math.random() * (container.offsetHeight - 100) + 50;
+                const fish = createFish(x, y);
+                fishArray.push(fish);
+            }
+        }
+
+        // Create food at clicked position
+        function createFood(x, y) {
+            const food = document.createElement('div');
+            food.className = 'food';
+            food.style.width = '10px';
+            food.style.height = '10px';
+            food.style.left = (x - 5) + 'px';
+            food.style.top = (y - 5) + 'px';
+            aquarium.appendChild(food);
+            
+            const foodObj = {
+                element: food,
+                x: x,
+                y: y,
+                eaten: false
+            };
+            
+            foodPieces.push(foodObj);
+            fishFoodCounter++;
+            return foodObj;
+        }
+
+        // Find closest food to fish
+        function findClosestFood(fish) {
+            let closestFood = null;
+            let closestDistance = Infinity;
+            
+            for (const food of foodPieces) {
+                if (!food.eaten) {
+                    const dx = fish.x - food.x;
+                    const dy = fish.y - food.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestFood = food;
+                    }
+                }
+            }
+            
+            return closestFood;
+        }
+
+        // Update fish movement
+        function updateFish() {
+            for (const fish of fishArray) {
+                // If fish is chasing food
+                if (fish.chasing && fish.targetFood) {
+                    const dx = fish.targetFood.x - fish.x;
+                    const dy = fish.targetFood.y - fish.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Check if fish reached food
+                    if (distance < 10) {
+                        fish.targetFood.eaten = true;
+                        fish.targetFood.element.remove();
+                        fish.targetFood = null;
+                        fish.chasing = false;
+                        fishFoodCounter--;
+                    } else {
+                        // Move towards food
+                        const speed = fish.speed;
+                        fish.x += (dx / distance) * speed;
+                        fish.y += (dy / distance) * speed;
+                        
+                        // Rotate fish based on direction
+                        const angle = Math.atan2(dy, dx);
+                        fish.element.style.transform = `rotate(${angle}rad)`;
+                    }
+                } else {
+                    // Normal swimming behavior
+                    fish.angle += (Math.random() - 0.5) * 0.1;
+                    fish.x += Math.cos(fish.angle) * fish.speed;
+                    fish.y += Math.sin(fish.angle) * fish.speed;
+                    
+                    // Bounce off walls
+                    if (fish.x < 0 || fish.x > container.offsetWidth) {
+                        fish.angle = Math.PI - fish.angle;
+                    }
+                    if (fish.y < 0 || fish.y > container.offsetHeight) {
+                        fish.angle = -fish.angle;
+                    }
+                    
+                    // Occasionally change direction
+                    if (Math.random() < 0.02) {
+                        fish.angle += (Math.random() - 0.5) * 0.5;
+                    }
+                    
+                    // Rotate fish based on movement direction
+                    fish.element.style.transform = `rotate(${fish.angle}rad)`;
+                }
+                
+                // Update fish position
+                fish.element.style.left = fish.x + 'px';
+                fish.element.style.top = fish.y + 'px';
+                
+                // Check if fish should start chasing food
+                if (!fish.chasing && !fish.targetFood) {
+                    const closestFood = findClosestFood(fish);
+                    if (closestFood) {
+                        fish.targetFood = closestFood;
+                        fish.chasing = true;
+                    }
+                }
+            }
+            
+            // Remove eaten food from array
+            for (let i = foodPieces.length - 1; i >= 0; i--) {
+                if (foodPieces[i].eaten) {
+                    foodPieces.splice(i, 1);
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            updateFish();
+            requestAnimationFrame(animate);
+        }
+
+        // Click event to add food
+        aquarium.addEventListener('click', (e) => {
+            const rect = aquarium.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            createFood(x, y);
+        });
+
+        // Initialize
+        createBubbles();
+        createInitialFish();
+        animate();
+    </script>
+</body>
+</html>
